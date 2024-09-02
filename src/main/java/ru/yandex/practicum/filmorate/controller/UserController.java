@@ -1,10 +1,12 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.validation.BaseValidation;
+import ru.yandex.practicum.filmorate.validation.PartialValidation;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,7 +26,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User postUser(@Valid @RequestBody User user) {
+    public User postUser(@Validated(BaseValidation.class) @RequestBody User user) {
         log.info("Поступил Post запрос с телом: {}", user);
         String name = user.getName();
         int id = getNextId();
@@ -38,11 +40,15 @@ public class UserController {
     }
 
     @PutMapping
-    public User putUser(@Valid @RequestBody User user) {
+    public User putUser(@Validated(PartialValidation.class) @RequestBody User user) {
         log.info("Поступил Put запрос с телом: {}", user);
         int id = user.getId();
         if (users.containsKey(id)) {
-            users.put(id, user);
+            String email = user.getEmail();
+            User oldUser = users.put(id, user);
+            if (email == null || email.isBlank()) {
+                user.setEmail(oldUser.getEmail());
+            }
             log.info("Put запрос успешно обработан");
             return user;
         }
