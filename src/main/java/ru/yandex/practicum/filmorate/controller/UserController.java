@@ -1,64 +1,64 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.validation.BaseValidation;
 import ru.yandex.practicum.filmorate.validation.PartialValidation;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
-    private int currentId = 1;
-    private final Map<Integer, User> users = new HashMap<>();
+    private final UserService userService;
 
     @GetMapping
     public Collection<User> getAll() {
-        log.info("Поступил Get запрос на получение списка всех пользователей");
-        return users.values();
+        return userService.getAllUsers();
+    }
+
+    @GetMapping("/{id}/friends")
+    public Collection<User> getAllFriends(@PathVariable int id) {
+        userService.checkExistence(id);
+        return userService.getAllFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        userService.checkExistence(id);
+        userService.checkExistence(otherId);
+        return userService.getCommonFriends(id, otherId);
     }
 
     @PostMapping
     public User postUser(@Validated(BaseValidation.class) @RequestBody User user) {
-        log.info("Поступил Post запрос с телом: {}", user);
-        String name = user.getName();
-        int id = getNextId();
-        user.setId(id);
-        if (name == null || name.isBlank()) {
-            user.setName(user.getLogin());
-        }
-        users.put(id, user);
-        log.info("Запрос успешно обработан. Добавлен пользователь: {}", user);
-        return user;
+        return userService.addUser(user);
+
     }
 
     @PutMapping
     public User putUser(@Validated(PartialValidation.class) @RequestBody User user) {
-        log.info("Поступил Put запрос с телом: {}", user);
-        int id = user.getId();
-        if (users.containsKey(id)) {
-            String email = user.getEmail();
-            User oldUser = users.put(id, user);
-            if (email == null || email.isBlank()) {
-                user.setEmail(oldUser.getEmail());
-            }
-            log.info("Put запрос успешно обработан");
-            return user;
-        }
-        log.warn("Пользователь с таким id не найден");
-        throw new NotFoundException("Пользователь с таким id не найден");
+        userService.checkExistence(user.getId());
+        return userService.updateUser(user);
     }
 
-    private int getNextId() {
-        return currentId++;
+    @PutMapping("/{id}/friends/{friendId}")
+    public User addFriend(@PathVariable int id, @PathVariable int friendId) {
+        userService.checkExistence(id);
+        userService.checkExistence(friendId);
+        return userService.addFriend(id, friendId);
     }
 
-
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public User deleteFriend(@PathVariable int id, @PathVariable int friendId) {
+        userService.checkExistence(id);
+        userService.checkExistence(friendId);
+        return userService.deleteFriend(id, friendId);
+    }
 }
