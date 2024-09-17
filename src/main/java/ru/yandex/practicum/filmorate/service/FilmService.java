@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
@@ -16,27 +15,34 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FilmService {
     private final FilmStorage filmStorage;
+    private final UserService userService;
 
     public Film addFilm(Film film) {
         return filmStorage.addFilm(film);
     }
 
     public Film updateFilm(Film film) {
+        getFilm(film.getId());
         return filmStorage.updateFilm(film);
     }
 
-    public Collection<Film> getAllFilms() {
+    public List<Film> getAllFilms() {
         return filmStorage.getAllFilms();
     }
 
     public Film addLike(int id, int userId) {
-        Film film = filmStorage.getFilm(id);
+        Film film = getFilm(id);
+        userService.getUser(userId);
         film.getLikes().add(userId);
         return film;
     }
 
+    public Film getFilm(int id) {
+        return filmStorage.getFilm(id).orElseThrow(() -> new NotFoundException("Фильм с id: " + id + " не найден"));
+    }
+
     public Film deleteLike(int id, int userId) {
-        Film film = filmStorage.getFilm(id);
+        Film film = getFilm(id);
         if (film.getLikes().remove(userId)) {
             return film;
         }
@@ -48,13 +54,5 @@ public class FilmService {
         return filmStorage.getAllFilms().stream()
                 .sorted(Comparator.comparingInt((Film film) -> film.getLikes().size()).reversed())
                 .limit(count).toList();
-    }
-
-    public void checkExistence(int id) {
-        if (filmStorage.isExists(id)) {
-            return;
-        }
-        log.warn("Фильм с id: {} не найден.", id);
-        throw new NotFoundException("Фильм с id: " + id + " не найден");
     }
 }

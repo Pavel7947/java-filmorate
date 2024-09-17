@@ -15,7 +15,7 @@ public class LaterDateValidator implements ConstraintValidator<LaterDate, LocalD
 
     @Override
     public boolean isValid(LocalDate localDate, ConstraintValidatorContext context) {
-        return localDate == null || localDate.isAfter(min);
+        return localDate == null || !localDate.isBefore(min);
     }
 }
 

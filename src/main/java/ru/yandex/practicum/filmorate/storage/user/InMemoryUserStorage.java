@@ -38,28 +38,21 @@ public class InMemoryUserStorage implements UserStorage {
         if (email == null || email.isBlank()) {
             user.setEmail(oldUser.getEmail());
         }
-        if (user.getFriends() == null) {
-            user.setFriends(oldUser.getFriends());
-        }
+        user.setFriends(oldUser.getFriends());
         return user;
     }
 
     @Override
-    public Collection<User> getAllUsers() {
-        return users.values();
+    public List<User> getAllUsers() {
+        return List.copyOf(users.values());
     }
 
     @Override
-    public User getUser(int id) {
-        return users.get(id);
+    public Optional<User> getUser(int id) {
+        return Optional.ofNullable(users.get(id));
     }
 
     private int getNextId() {
         return currentId++;
-    }
-
-    @Override
-    public boolean isExists(int id) {
-        return users.containsKey(id);
     }
 }

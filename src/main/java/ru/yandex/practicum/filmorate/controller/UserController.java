@@ -25,14 +25,11 @@ public class UserController {
 
     @GetMapping("/{id}/friends")
     public Collection<User> getAllFriends(@PathVariable int id) {
-        userService.checkExistence(id);
         return userService.getAllFriends(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public Collection<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
-        userService.checkExistence(id);
-        userService.checkExistence(otherId);
         return userService.getCommonFriends(id, otherId);
     }
 
@@ -44,21 +41,16 @@ public class UserController {
 
     @PutMapping
     public User putUser(@Validated(PartialValidation.class) @RequestBody User user) {
-        userService.checkExistence(user.getId());
         return userService.updateUser(user);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
     public User addFriend(@PathVariable int id, @PathVariable int friendId) {
-        userService.checkExistence(id);
-        userService.checkExistence(friendId);
         return userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public User deleteFriend(@PathVariable int id, @PathVariable int friendId) {
-        userService.checkExistence(id);
-        userService.checkExistence(friendId);
         return userService.deleteFriend(id, friendId);
     }
 }

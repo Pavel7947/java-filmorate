@@ -30,25 +30,18 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film updateFilm(Film film) {
         Film oldFilm = films.put(film.getId(), film);
-        if (film.getLikes() == null) {
-            film.setLikes(oldFilm.getLikes());
-        }
+        film.setLikes(oldFilm.getLikes());
         return film;
     }
 
     @Override
-    public Collection<Film> getAllFilms() {
-        return films.values();
+    public List<Film> getAllFilms() {
+        return List.copyOf(films.values());
     }
 
     @Override
-    public Film getFilm(int id) {
-        return films.get(id);
-    }
-
-    @Override
-    public boolean isExists(int id) {
-        return films.containsKey(id);
+    public Optional<Film> getFilm(int id) {
+        return Optional.ofNullable(films.get(id));
     }
 
     private int getNextId() {

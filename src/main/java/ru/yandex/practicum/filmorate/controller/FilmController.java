@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
 
@@ -16,7 +15,6 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class FilmController {
     private final FilmService filmService;
-    private final UserService userService;
 
 
     @GetMapping
@@ -31,15 +29,11 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     public Film addLike(@PathVariable int id, @PathVariable int userId) {
-        filmService.checkExistence(id);
-        userService.checkExistence(userId);
         return filmService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     public Film deleteLike(@PathVariable int id, @PathVariable int userId) {
-        filmService.checkExistence(id);
-        userService.checkExistence(userId);
         return filmService.deleteLike(id, userId);
     }
 
@@ -50,7 +44,6 @@ public class FilmController {
 
     @PutMapping
     public Film putFilm(@Valid @RequestBody Film film) {
-        filmService.checkExistence(film.getId());
         return filmService.updateFilm(film);
     }
 }
