@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -35,11 +36,17 @@ public class ErrorHandler {
         return errors;
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(ConstraintViolationException.class)
+    public Map<String, String> handleConstraintViolationException(ConstraintViolationException e) {
+        log.debug("Получен статус 400 BAD-REQUEST {}", e.getMessage(), e);
+        return Map.of("error", e.getMessage());
+    }
+
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
     public Map<String, String> handleAllExceptions(Exception e) {
         log.debug("Получен статус 500 INTERNAL_SERVER_ERROR {}", e.getMessage(), e);
         return Map.of("error", "Ой у нас чтото сломалось :)");
     }
-
 }

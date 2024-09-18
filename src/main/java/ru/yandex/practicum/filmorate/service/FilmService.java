@@ -22,7 +22,8 @@ public class FilmService {
     }
 
     public Film updateFilm(Film film) {
-        getFilm(film.getId());
+        Film oldFilm = getFilm(film.getId());
+        film.getLikes().addAll(oldFilm.getLikes());
         return filmStorage.updateFilm(film);
     }
 

@@ -20,17 +20,13 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Film addFilm(Film film) {
         int id = getNextId();
         film.setId(id);
-        if (film.getLikes() == null) {
-            film.setLikes(new HashSet<>());
-        }
         films.put(id, film);
         return film;
     }
 
     @Override
     public Film updateFilm(Film film) {
-        Film oldFilm = films.put(film.getId(), film);
-        film.setLikes(oldFilm.getLikes());
+        films.put(film.getId(), film);
         return film;
     }
 

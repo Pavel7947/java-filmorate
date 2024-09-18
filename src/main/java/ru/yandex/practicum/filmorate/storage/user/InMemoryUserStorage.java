@@ -20,25 +20,13 @@ public class InMemoryUserStorage implements UserStorage {
     public User addUser(User user) {
         int id = getNextId();
         user.setId(id);
-        String name = user.getName();
-        if (name == null || name.isBlank()) {
-            user.setName(user.getLogin());
-        }
-        if (user.getFriends() == null) {
-            user.setFriends(new HashSet<>());
-        }
         users.put(id, user);
         return user;
     }
 
     @Override
     public User updateUser(User user) {
-        String email = user.getEmail();
-        User oldUser = users.put(user.getId(), user);
-        if (email == null || email.isBlank()) {
-            user.setEmail(oldUser.getEmail());
-        }
-        user.setFriends(oldUser.getFriends());
+        users.put(user.getId(), user);
         return user;
     }
 

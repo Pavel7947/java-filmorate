@@ -30,5 +30,5 @@ public class User {
             message = "День рождения должен быть обязательно указан")
     private LocalDate birthday;
     @JsonIgnore
-    private Set<Integer> friends = new HashSet<>();
+    private final Set<Integer> friends = new HashSet<>();
 }

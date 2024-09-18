@@ -18,7 +18,6 @@ public class UserService {
     public User addFriend(int userId, int friendId) {
         User user = getUser(userId);
         User friend = getUser(friendId);
-
         user.getFriends().add(friendId);
         friend.getFriends().add(userId);
         return user;
@@ -43,11 +42,18 @@ public class UserService {
     }
 
     public User addUser(User user) {
+        checkName(user);
         return userStorage.addUser(user);
     }
 
     public User updateUser(User user) {
-        getUser(user.getId());
+        User oldUser = getUser(user.getId());
+        checkName(user);
+        String email = user.getEmail();
+        if (email == null || email.isBlank()) {
+            user.setEmail(oldUser.getEmail());
+        }
+        user.getFriends().addAll(oldUser.getFriends());
         return userStorage.updateUser(user);
     }
 
@@ -61,5 +67,12 @@ public class UserService {
         User otherUser = getUser(otherId);
 
         return user.getFriends().stream().filter(otherUser.getFriends()::contains).map(this::getUser).toList();
+    }
+
+    private void checkName(User user) {
+        String name = user.getName();
+        if (name == null || name.isBlank()) {
+            user.setName(user.getLogin());
+        }
     }
 }
