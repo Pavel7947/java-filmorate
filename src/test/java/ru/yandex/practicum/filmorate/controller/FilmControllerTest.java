@@ -59,7 +59,7 @@ public class FilmControllerTest {
         Film failFilm = film.toBuilder().releaseDate(LocalDate.of(1600, 12, 5)).build();
         int statusCode = restTemplate.postForEntity("http://localhost:" + port + "/films", failFilm, Film.class)
                 .getStatusCode().value();
-        assertEquals(500, statusCode);
+        assertEquals(400, statusCode);
     }
 }
 
