@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.validation.PartialValidation;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @Data
@@ -30,5 +31,6 @@ public class User {
             message = "День рождения должен быть обязательно указан")
     private LocalDate birthday;
     @JsonIgnore
-    private final Set<Integer> friends = new HashSet<>();
+    private final Map<StatusFriendship, Set<Integer>> friends = Map.of(StatusFriendship.APPROVED, new HashSet<>(),
+            StatusFriendship.DISAPPROVED, new HashSet<>());
 }

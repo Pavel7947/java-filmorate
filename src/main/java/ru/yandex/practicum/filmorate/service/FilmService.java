@@ -3,9 +3,9 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.repository.film.FilmRepository;
 
 import java.util.Comparator;
 import java.util.List;
@@ -14,21 +14,21 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class FilmService {
-    private final FilmStorage filmStorage;
+    private final FilmRepository filmRepository;
     private final UserService userService;
 
     public Film addFilm(Film film) {
-        return filmStorage.addFilm(film);
+        return filmRepository.addFilm(film);
     }
 
     public Film updateFilm(Film film) {
         Film oldFilm = getFilm(film.getId());
         film.getLikes().addAll(oldFilm.getLikes());
-        return filmStorage.updateFilm(film);
+        return filmRepository.updateFilm(film);
     }
 
     public List<Film> getAllFilms() {
-        return filmStorage.getAllFilms();
+        return filmRepository.getAllFilms();
     }
 
     public Film addLike(int id, int userId) {
@@ -39,7 +39,7 @@ public class FilmService {
     }
 
     public Film getFilm(int id) {
-        return filmStorage.getFilm(id).orElseThrow(() -> new NotFoundException("Фильм с id: " + id + " не найден"));
+        return filmRepository.getFilm(id).orElseThrow(() -> new NotFoundException("Фильм с id: " + id + " не найден"));
     }
 
     public Film deleteLike(int id, int userId) {
@@ -52,7 +52,7 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilms(int count) {
-        return filmStorage.getAllFilms().stream()
+        return filmRepository.getAllFilms().stream()
                 .sorted(Comparator.comparingInt((Film film) -> film.getLikes().size()).reversed())
                 .limit(count).toList();
     }
