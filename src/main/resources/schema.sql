@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS films_genres(
 genre_id int REFERENCES genres(genre_id) NOT NULL,
 film_id int REFERENCES films(film_id) NOT NULL);
 
-CREATE TABLE IF NOT EXISTS films_likes(
+CREATE TABLE IF NOT EXISTS likes(
 user_id int REFERENCES users(user_id) NOT NULL,
 film_id int REFERENCES films(film_id) NOT NULL);
 

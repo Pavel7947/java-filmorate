@@ -11,11 +11,11 @@ public interface UserRepository {
 
     User updateUser(User user);
 
-    List<User> getAllUsers();
+    List<User> getAll();
 
-    Optional<User> getUser(int id);
+    Optional<User> getById(int id);
 
-    List<User> getSeveralUsers(Collection<Integer> ids);
+    List<User> getSeveral(Collection<Integer> ids);
 
     void addFriend(int userId, int friendId);
 

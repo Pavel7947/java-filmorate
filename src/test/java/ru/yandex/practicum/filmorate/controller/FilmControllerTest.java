@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.time.LocalDate;
 
@@ -15,7 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class FilmControllerTest {
     Film film = Film.builder().name("Film").description("Very good film")
-            .releaseDate(LocalDate.of(2016, 8, 30)).duration(3600).build();
+            .releaseDate(LocalDate.of(2016, 8, 30)).duration(3600).mpa(Mpa.builder().id(1)
+                    .build()).build();
 
     @LocalServerPort
     private int port;

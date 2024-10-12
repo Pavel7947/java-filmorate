@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -35,11 +34,11 @@ public class UserService {
         User user = getUser(userId);
         Set<Integer> idsFriends = user.getFriends().values().stream().flatMap(Collection::stream)
                 .collect(Collectors.toSet());
-        return userRepository.getSeveralUsers(idsFriends);
+        return userRepository.getSeveral(idsFriends);
     }
 
     public List<User> getAllUsers() {
-        return userRepository.getAllUsers();
+        return userRepository.getAll();
     }
 
     public User addUser(User user) {
@@ -64,7 +63,7 @@ public class UserService {
     }
 
     public User getUser(int id) {
-        return userRepository.getUser(id)
+        return userRepository.getById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id: " + id + " не найден"));
     }
 
@@ -76,7 +75,7 @@ public class UserService {
                 .collect(Collectors.toSet());
         Set<Integer> friendsUser = user.getFriends().values().stream().flatMap(Collection::stream)
                 .collect(Collectors.toSet());
-        return userRepository.getSeveralUsers(friendsUser.stream().filter(friendsOtherUser::contains)
+        return userRepository.getSeveral(friendsUser.stream().filter(friendsOtherUser::contains)
                 .collect(Collectors.toSet()));
     }
 

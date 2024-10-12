@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.repository.film;
 
 
-import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.List;
@@ -13,7 +12,11 @@ public interface FilmRepository {
 
     Film updateFilm(Film film);
 
-    List<Film> getAllFilms();
+    List<Film> getAll();
 
-    Optional<Film> getFilm(int id);
+    Optional<Film> getById(int id);
+
+    void addLike(int filmId, int userId);
+
+    void deleteLike(int filmId, int userId);
 }
