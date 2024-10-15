@@ -1,54 +1,35 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.BadRequestException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.repository.film.FilmRepository;
+import ru.yandex.practicum.filmorate.repository.genre.GenreRepository;
+import ru.yandex.practicum.filmorate.repository.mpa.MpaRepository;
+import ru.yandex.practicum.filmorate.repository.user.UserRepository;
 
-import java.util.Comparator;
 import java.util.List;
 
-@Slf4j
+
 @Service
 @RequiredArgsConstructor
 public class FilmService {
     private final FilmRepository filmRepository;
-    private final GenreService genreService;
-    private final MpaService mpaService;
-    private final UserService userService;
+    private final GenreRepository genreRepository;
+    private final MpaRepository mpaRepository;
+    private final UserRepository userRepository;
 
     public Film addFilm(Film film) {
-        try {
-            if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-                List<Integer> ids = film.getGenres().stream().map(Genre::getId).toList();
-                genreService.getSeveral(ids);
-            }
-            if (film.getMpa() != null) {
-                mpaService.getById(film.getMpa().getId());
-            }
-        } catch (NotFoundException e) {
-            throw new BadRequestException(e.getMessage());
-        }
+        checkMpaAndGenres(film);
         return filmRepository.addFilm(film);
     }
 
     public Film updateFilm(Film film) {
         getById(film.getId());
-        try {
-            if (film.getGenres() != null) {
-                List<Integer> ids = film.getGenres().stream().map(Genre::getId).toList();
-                genreService.getSeveral(ids);
-            }
-            if (film.getMpa() != null) {
-                mpaService.getById(film.getMpa().getId());
-            }
-        } catch (NotFoundException e) {
-            throw new BadRequestException(e.getMessage());
-        }
+        checkMpaAndGenres(film);
         return filmRepository.updateFilm(film);
     }
 
@@ -58,23 +39,38 @@ public class FilmService {
 
     public void addLike(int id, int userId) {
         getById(id);
-        userService.getUser(userId);
+        userRepository.getById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден"));
         filmRepository.addLike(id, userId);
     }
 
     public Film getById(int id) {
-        return filmRepository.getById(id).orElseThrow(() -> new NotFoundException("Фильм с id: " + id + " не найден"));
+        return filmRepository.getById(id)
+                .orElseThrow(() -> new NotFoundException("Фильм с id: " + id + " не найден"));
     }
 
     public void deleteLike(int filmId, int userId) {
         getById(filmId);
-        userService.getUser(userId);
+        userRepository.getById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден"));
         filmRepository.deleteLike(filmId, userId);
     }
 
-    public List<Film> getPopularFilms(int count) {
-        return filmRepository.getAll().stream()
-                .sorted(Comparator.comparingInt((Film film) -> film.getLikes().size()).reversed())
-                .limit(count).toList();
+    public List<Film> getTopPopularFilms(int count) {
+        return filmRepository.getTopPopularFilms(count);
+    }
+
+    private void checkMpaAndGenres(Film film) {
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            List<Integer> ids = film.getGenres().stream().map(Genre::getId).toList();
+            List<Genre> findGenres = genreRepository.getSeveral(ids);
+            if (findGenres.size() != ids.size()) {
+                throw new BadRequestException("Передан неправильный список жанров. Некоторые жанры не удалось найти в базе");
+            }
+        }
+        if (film.getMpa() != null) {
+            mpaRepository.getById(film.getMpa().getId())
+                    .orElseThrow(() -> new BadRequestException("Передан несуществующий в программе mpa рейтинг"));
+        }
     }
 }

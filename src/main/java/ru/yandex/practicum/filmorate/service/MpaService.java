@@ -16,7 +16,8 @@ public class MpaService {
     private final MpaRepository mpaRepository;
 
     public Mpa getById(int id) {
-        return mpaRepository.getById(id).orElseThrow(() -> new NotFoundException("Рейтинг с id: " + id + "не найден"));
+        return mpaRepository.getById(id)
+                .orElseThrow(() -> new NotFoundException("Рейтинг с id: " + id + "не найден"));
     }
 
     public List<Mpa> getAll() {

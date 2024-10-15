@@ -1,10 +1,7 @@
 package ru.yandex.practicum.filmorate.repository.film;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -14,11 +11,11 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.GenreFilmRelation;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.repository.mapper.FilmRowMapper;
+import ru.yandex.practicum.filmorate.repository.mapper.GenreFilmRelationRowMapper;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 
 @Repository
@@ -26,6 +23,36 @@ import java.util.*;
 @Slf4j
 public class JdbcFilmRepository implements FilmRepository {
     private final NamedParameterJdbcOperations jdbc;
+
+    @Override
+    public List<Film> getTopPopularFilms(int count) {
+        String queryGetFilms = "SELECT f.film_id, f.name AS film_name, description, release_date, duration, " +
+                "f.rating_id, mr.name AS mpa_name FROM films AS f " +
+                "JOIN mpa_ratings AS mr ON mr.rating_id = f.rating_id " +
+                "JOIN (SELECT film_id, COUNT(user_id) as count_like FROM likes GROUP BY film_id ORDER by count_like DESC " +
+                "LIMIT :count) AS l ON l.film_id = f.film_id ORDER by count_like DESC;";
+
+        String queryGetGenre = "SELECT fg.film_id, fg.genre_id, name FROM films_genres AS fg " +
+                "JOIN genres AS g ON fg.genre_id = g.genre_id " +
+                "JOIN (SELECT film_id, COUNT(user_id) as count_like FROM likes GROUP BY film_id ORDER by count_like DESC " +
+                "LIMIT :count) AS l ON l.film_id = fg.film_id ORDER by count_like DESC;";
+
+        List<Film> films = jdbc.query(queryGetFilms, Map.of("count", count), new FilmRowMapper());
+        List<GenreFilmRelation> genreRelations = jdbc.query(queryGetGenre, Map.of("count", count),
+                new GenreFilmRelationRowMapper());
+
+        for (Film film : films) {
+            Set<Genre> genres = film.getGenres();
+            int filmId = film.getId();
+            for (GenreFilmRelation relation : genreRelations) {
+                if (relation.getFilmId() != filmId) {
+                    continue;
+                }
+                genres.add(Genre.builder().id(relation.getGenreId()).name(relation.getGenreName()).build());
+            }
+        }
+        return films;
+    }
 
     @Override
     public void addLike(int filmId, int userId) {
@@ -80,29 +107,20 @@ public class JdbcFilmRepository implements FilmRepository {
         String queryGetAllFilms = "SELECT film_id, f.name AS film_name, description, release_date, duration, " +
                 "f.rating_id, mr.name AS mpa_name FROM films AS f " +
                 "JOIN mpa_ratings AS mr ON mr.rating_id = f.rating_id";
-        String queryGetAllLikeRelations = "SELECT film_id, user_id FROM likes";
         String queryGetAllGenreRelations = "SELECT film_id, fg.genre_id, name FROM films_genres AS fg " +
                 "JOIN genres AS g ON fg.genre_id = g.genre_id";
 
         List<Film> films = jdbc.query(queryGetAllFilms, new FilmRowMapper());
-        List<GenreRelation> genreRelations = jdbc.query(queryGetAllGenreRelations, new GenreRelationRowMapper());
-        List<LikesRelation> likesRelations = jdbc.query(queryGetAllLikeRelations, new LikesRelationRowMapper());
+        List<GenreFilmRelation> genreRelations = jdbc.query(queryGetAllGenreRelations, new GenreFilmRelationRowMapper());
 
         for (Film film : films) {
             Set<Genre> genres = film.getGenres();
             int filmId = film.getId();
-            for (GenreRelation relation : genreRelations) {
+            for (GenreFilmRelation relation : genreRelations) {
                 if (relation.getFilmId() != filmId) {
                     continue;
                 }
                 genres.add(Genre.builder().id(relation.getGenreId()).name(relation.getGenreName()).build());
-            }
-            Set<Integer> likes = film.getLikes();
-            for (LikesRelation relation : likesRelations) {
-                if (relation.getFilmId() != filmId) {
-                    continue;
-                }
-                likes.add(relation.getUserId());
             }
         }
         return films;
@@ -113,10 +131,8 @@ public class JdbcFilmRepository implements FilmRepository {
     @Override
     public Optional<Film> getById(int id) {
         String queryGetFilm = "SELECT f.film_id, f.name AS film_name, g.name AS genre_name, r.name AS rating_name, " +
-                "description, duration, release_date, f.rating_id, user_id, " +
-                "g.genre_id  FROM films AS f " +
+                "description, duration, release_date, f.rating_id, g.genre_id  FROM films AS f " +
                 "LEFT OUTER JOIN films_genres AS fg ON fg.film_id = f.film_id " +
-                "LEFT OUTER JOIN likes AS l ON f.film_id = l.film_id " +
                 "LEFT OUTER JOIN genres AS g ON fg.genre_id = g.genre_id " +
                 "LEFT OUTER JOIN mpa_ratings AS r ON r.rating_id = f.rating_id " +
                 "WHERE f.film_id = :id " +
@@ -139,16 +155,23 @@ public class JdbcFilmRepository implements FilmRepository {
                 if (genreId != 0) {
                     film.getGenres().add(Genre.builder().id(genreId).name(rs.getString("genre_name")).build());
                 }
-                int userId = rs.getInt("user_id");
-                if (userId != 0) {
-                    film.getLikes().add(userId);
-                }
             }
             return film;
         }));
 
     }
 
+
+    @Override
+    public List<Integer> getListAllLikes(int filmId) {
+        return jdbc.query("SELECT user_id FROM likes WHERE film_id = :filmId", Map.of("filmId", filmId), rs -> {
+            List<Integer> ids = new ArrayList<>();
+            while (rs.next()) {
+                ids.add(rs.getInt("user_id"));
+            }
+            return ids;
+        });
+    }
 
     private void insertFilmsGenres(Film film) {
         int filmId = film.getId();
@@ -163,43 +186,7 @@ public class JdbcFilmRepository implements FilmRepository {
             }
             jdbc.batchUpdate(queryInsertFilmGenres, batchValues);
         }
-    }
 
-    @Getter
-    @Setter
-    private static class GenreRelation {
-        private int filmId;
-        private int genreId;
-        private String genreName;
-    }
 
-    private static class GenreRelationRowMapper implements RowMapper<GenreRelation> {
-        @Override
-        public GenreRelation mapRow(ResultSet rs, int rowNum) throws SQLException {
-            GenreRelation relation = new GenreRelation();
-            relation.setFilmId(rs.getInt("film_id"));
-            relation.setGenreId(rs.getInt("genre_id"));
-            relation.setGenreName(rs.getString("name"));
-            return relation;
-
-        }
-    }
-
-    @Getter
-    @Setter
-    private static class LikesRelation {
-        private int userId;
-        private int filmId;
-    }
-
-    private static class LikesRelationRowMapper implements RowMapper<LikesRelation> {
-        @Override
-        public LikesRelation mapRow(ResultSet rs, int rowNum) throws SQLException {
-            LikesRelation relation = new LikesRelation();
-            relation.setFilmId(rs.getInt("film_id"));
-            relation.setUserId(rs.getInt("user_id"));
-            return relation;
-
-        }
     }
 }

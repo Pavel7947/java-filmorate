@@ -18,5 +18,9 @@ public interface FilmRepository {
 
     void addLike(int filmId, int userId);
 
+    List<Integer> getListAllLikes(int filmId);
+
     void deleteLike(int filmId, int userId);
+
+    List<Film> getTopPopularFilms(int count);
 }

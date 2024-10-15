@@ -7,10 +7,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.repository.user.UserRepository;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -31,10 +28,8 @@ public class UserService {
     }
 
     public List<User> getAllFriends(int userId) {
-        User user = getUser(userId);
-        Set<Integer> idsFriends = user.getFriends().values().stream().flatMap(Collection::stream)
-                .collect(Collectors.toSet());
-        return userRepository.getSeveral(idsFriends);
+        getUser(userId);
+        return userRepository.getAllFriends(userId);
     }
 
     public List<User> getAllUsers() {
@@ -47,7 +42,6 @@ public class UserService {
             user.setName(user.getLogin());
         }
         return userRepository.addUser(user);
-
     }
 
     public User updateUser(User user) {
@@ -68,15 +62,9 @@ public class UserService {
     }
 
     public List<User> getCommonFriends(int userId, int otherId) {
-        User user = getUser(userId);
-        User otherUser = getUser(otherId);
-
-        Set<Integer> friendsOtherUser = otherUser.getFriends().values().stream().flatMap(Collection::stream)
-                .collect(Collectors.toSet());
-        Set<Integer> friendsUser = user.getFriends().values().stream().flatMap(Collection::stream)
-                .collect(Collectors.toSet());
-        return userRepository.getSeveral(friendsUser.stream().filter(friendsOtherUser::contains)
-                .collect(Collectors.toSet()));
+        getUser(userId);
+        getUser(otherId);
+        return userRepository.getCommonFriends(userId, otherId);
     }
 
 }

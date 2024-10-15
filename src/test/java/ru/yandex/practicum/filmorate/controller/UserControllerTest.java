@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -33,7 +34,7 @@ public class UserControllerTest {
     @Test
     public void postRequestWithoutALoginWillNotBeSuccessful() {
         User failUser = user.toBuilder().login("").build();
-        int statusCode = restTemplate.postForEntity("http://localhost:" + port + "/users", failUser, User.class)
+        int statusCode = restTemplate.postForEntity("http://localhost:" + port + "/users", failUser, List.class)
                 .getStatusCode().value();
         assertEquals(400, statusCode);
     }
@@ -41,7 +42,7 @@ public class UserControllerTest {
     @Test
     public void postRequestNullLoginWillNotBeSuccessful() {
         User failUser = user.toBuilder().login(null).build();
-        int statusCode = restTemplate.postForEntity("http://localhost:" + port + "/users", failUser, User.class)
+        int statusCode = restTemplate.postForEntity("http://localhost:" + port + "/users", failUser, List.class)
                 .getStatusCode().value();
         assertEquals(400, statusCode);
     }
@@ -49,7 +50,7 @@ public class UserControllerTest {
     @Test
     public void postRequestWithoutAEmailWillNotBeSuccessful() {
         User failUser = user.toBuilder().email("").build();
-        int statusCode = restTemplate.postForEntity("http://localhost:" + port + "/users", failUser, User.class)
+        int statusCode = restTemplate.postForEntity("http://localhost:" + port + "/users", failUser, List.class)
                 .getStatusCode().value();
         assertEquals(400, statusCode);
     }
@@ -57,7 +58,7 @@ public class UserControllerTest {
     @Test
     public void postRequestNullEmailWillNotBeSuccessful() {
         User failUser = user.toBuilder().email(null).build();
-        int statusCode = restTemplate.postForEntity("http://localhost:" + port + "/users", failUser, User.class)
+        int statusCode = restTemplate.postForEntity("http://localhost:" + port + "/users", failUser, List.class)
                 .getStatusCode().value();
         assertEquals(400, statusCode);
     }
@@ -65,7 +66,7 @@ public class UserControllerTest {
     @Test
     public void postRequestBirthdayInTheFutureWillNotBeSuccessful() {
         User failUser = user.toBuilder().birthday(LocalDate.of(2025, 8, 30)).build();
-        int statusCode = restTemplate.postForEntity("http://localhost:" + port + "/users", failUser, User.class)
+        int statusCode = restTemplate.postForEntity("http://localhost:" + port + "/users", failUser, List.class)
                 .getStatusCode().value();
         assertEquals(400, statusCode);
     }

@@ -53,9 +53,6 @@ INSERT INTO likes (film_id, user_id)
 values (1, 2);
 
 INSERT INTO likes (film_id, user_id)
-values(1, 2);
-
-INSERT INTO likes (film_id, user_id)
 values(2, 1);
 
 INSERT INTO films_genres (film_id, genre_id)

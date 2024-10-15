@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Import;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -23,7 +25,7 @@ public class JdbcFilmRepositoryTest {
 
     @Test
     public void testAddFilm() {
-        Film testFilm = getByTestFilmId().toBuilder().name("otherName").build();
+        Film testFilm = getTestFilmById().toBuilder().name("otherName").build();
         Film addedFilm = filmRepository.addFilm(testFilm);
 
         assertTrue(EqualsBuilder.reflectionEquals(testFilm, addedFilm, "id"), "Фильмы не совпадают");
@@ -37,29 +39,29 @@ public class JdbcFilmRepositoryTest {
 
     @Test
     public void testUpdateFilm() {
-        Film oldFilm = getByTestFilmId();
+        Film oldFilm = getTestFilmById();
         filmRepository.updateFilm(oldFilm.toBuilder().name("Terminator").build());
-        Film newFilm = getByTestFilmId();
+        Film newFilm = getTestFilmById();
         assertNotEquals(oldFilm.getName(), newFilm.getName(), "Имя не изменилось");
     }
 
     @Test
     public void testAddLike() {
-        Film oldFilm = getByTestFilmId();
+        List<Integer> oldLikesList = filmRepository.getListAllLikes(TEST_FILM_ID);
         filmRepository.addLike(TEST_FILM_ID, TEST_USER_ID);
-        Film newFilm = getByTestFilmId();
-        assertNotEquals(oldFilm.getLikes(), newFilm.getLikes(), "Лайк не добавился");
+        List<Integer> newLikesList = filmRepository.getListAllLikes(TEST_FILM_ID);
+        assertNotEquals(oldLikesList.size(), newLikesList.size(), "Лайк не добавился");
     }
 
     @Test
     public void testDeleteLike() {
-        Film oldFilm = getByTestFilmId();
-        filmRepository.deleteLike(TEST_FILM_ID, oldFilm.getLikes().stream().toList().getFirst());
-        Film newFilm = getByTestFilmId();
-        assertNotEquals(oldFilm.getLikes(), newFilm.getLikes(), "Лайк не удалился");
+        List<Integer> oldLikesList = filmRepository.getListAllLikes(TEST_FILM_ID);
+        filmRepository.deleteLike(TEST_FILM_ID, oldLikesList.getFirst());
+        List<Integer> newLikesList = filmRepository.getListAllLikes(TEST_FILM_ID);
+        assertNotEquals(oldLikesList.size(), newLikesList.size(), "Лайк не удалился");
     }
 
-    private Film getByTestFilmId() {
+    private Film getTestFilmById() {
         return filmRepository.getById(TEST_FILM_ID)
                 .orElseThrow(() -> new NotFoundException("Фильм с id: " + TEST_FILM_ID + " не найден"));
     }

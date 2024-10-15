@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.filmorate.exception.BadRequestException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @RestControllerAdvice
@@ -19,19 +19,19 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> handleNotFound(NotFoundException e) {
+    public ErrorResponse handleNotFound(NotFoundException e) {
         log.debug("Получен статус 404 Not found {}", e.getMessage(), e);
-        return Map.of("error", e.getMessage());
+        return new ErrorResponse(e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map<String, String> handleValidationExceptions(
+    public List<ErrorResponse> handleValidationExceptions(
             MethodArgumentNotValidException e) {
-        Map<String, String> errors = new HashMap<>();
+        List<ErrorResponse> errors = new ArrayList<>();
         e.getBindingResult().getAllErrors().forEach((error) -> {
             String errorMessage = error.getDefaultMessage();
-            errors.put("error", errorMessage);
+            errors.add(new ErrorResponse(errorMessage));
         });
         log.debug("Получен статус 400 BAD_REQUEST {}", e.getMessage(), e);
         return errors;
@@ -39,23 +39,23 @@ public class ErrorHandler {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(ConstraintViolationException.class)
-    public Map<String, String> handleConstraintViolationException(ConstraintViolationException e) {
+    public ErrorResponse handleConstraintViolationException(ConstraintViolationException e) {
         log.debug("Получен статус 400 BAD-REQUEST {}", e.getMessage(), e);
-        return Map.of("error", e.getMessage());
+        return new ErrorResponse(e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(BadRequestException.class)
-    public Map<String, String> handleBadRequestException(BadRequestException e) {
+    public ErrorResponse handleBadRequestException(BadRequestException e) {
         log.debug("Получен статус 400 BAD-REQUEST {}", e.getMessage(), e);
-        return Map.of("error", e.getMessage());
+        return new ErrorResponse(e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
-    public Map<String, String> handleAllExceptions(Exception e) {
+    public ErrorResponse handleAllExceptions(Exception e) {
         log.debug("Получен статус 500 INTERNAL_SERVER_ERROR {}", e.getMessage(), e);
-        return Map.of("error", "Ой у нас чтото сломалось :)");
+        return new ErrorResponse("Ой у нас чтото сломалось :)");
     }
 
 }
