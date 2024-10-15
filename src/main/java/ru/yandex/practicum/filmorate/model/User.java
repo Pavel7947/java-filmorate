@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -11,8 +10,6 @@ import ru.yandex.practicum.filmorate.validation.BaseValidation;
 import ru.yandex.practicum.filmorate.validation.PartialValidation;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 @Data
 @Builder(toBuilder = true)
@@ -29,6 +26,4 @@ public class User {
     @NotNull(groups = {BaseValidation.class, PartialValidation.class},
             message = "День рождения должен быть обязательно указан")
     private LocalDate birthday;
-    @JsonIgnore
-    private final Set<Integer> friends = new HashSet<>();
 }
