@@ -1,59 +1,76 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.BadRequestException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.repository.film.FilmRepository;
+import ru.yandex.practicum.filmorate.repository.genre.GenreRepository;
+import ru.yandex.practicum.filmorate.repository.mpa.MpaRepository;
+import ru.yandex.practicum.filmorate.repository.user.UserRepository;
 
-import java.util.Comparator;
 import java.util.List;
 
-@Slf4j
+
 @Service
 @RequiredArgsConstructor
 public class FilmService {
-    private final FilmStorage filmStorage;
-    private final UserService userService;
+    private final FilmRepository filmRepository;
+    private final GenreRepository genreRepository;
+    private final MpaRepository mpaRepository;
+    private final UserRepository userRepository;
 
     public Film addFilm(Film film) {
-        return filmStorage.addFilm(film);
+        checkMpaAndGenres(film);
+        return filmRepository.addFilm(film);
     }
 
     public Film updateFilm(Film film) {
-        Film oldFilm = getFilm(film.getId());
-        film.getLikes().addAll(oldFilm.getLikes());
-        return filmStorage.updateFilm(film);
+        getById(film.getId());
+        checkMpaAndGenres(film);
+        return filmRepository.updateFilm(film);
     }
 
-    public List<Film> getAllFilms() {
-        return filmStorage.getAllFilms();
+    public List<Film> getAll() {
+        return filmRepository.getAll();
     }
 
-    public Film addLike(int id, int userId) {
-        Film film = getFilm(id);
-        userService.getUser(userId);
-        film.getLikes().add(userId);
-        return film;
+    public void addLike(int id, int userId) {
+        getById(id);
+        userRepository.getById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден"));
+        filmRepository.addLike(id, userId);
     }
 
-    public Film getFilm(int id) {
-        return filmStorage.getFilm(id).orElseThrow(() -> new NotFoundException("Фильм с id: " + id + " не найден"));
+    public Film getById(int id) {
+        return filmRepository.getById(id)
+                .orElseThrow(() -> new NotFoundException("Фильм с id: " + id + " не найден"));
     }
 
-    public Film deleteLike(int id, int userId) {
-        Film film = getFilm(id);
-        if (film.getLikes().remove(userId)) {
-            return film;
+    public void deleteLike(int filmId, int userId) {
+        getById(filmId);
+        userRepository.getById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден"));
+        filmRepository.deleteLike(filmId, userId);
+    }
+
+    public List<Film> getTopPopularFilms(int count) {
+        return filmRepository.getTopPopularFilms(count);
+    }
+
+    private void checkMpaAndGenres(Film film) {
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            List<Integer> ids = film.getGenres().stream().map(Genre::getId).toList();
+            List<Genre> findGenres = genreRepository.getSeveral(ids);
+            if (findGenres.size() != ids.size()) {
+                throw new BadRequestException("Передан неправильный список жанров. Некоторые жанры не удалось найти в базе");
+            }
         }
-        log.warn("Фильм с id:{} не содержит в себе лайка от пользователя с id: {}", id, userId);
-        throw new NotFoundException("Фильм с id: " + id + " не содержит в себе лайка от  пользователя с id: " + userId);
-    }
-
-    public List<Film> getPopularFilms(int count) {
-        return filmStorage.getAllFilms().stream()
-                .sorted(Comparator.comparingInt((Film film) -> film.getLikes().size()).reversed())
-                .limit(count).toList();
+        if (film.getMpa() != null) {
+            mpaRepository.getById(film.getMpa().getId())
+                    .orElseThrow(() -> new BadRequestException("Передан несуществующий в программе mpa рейтинг"));
+        }
     }
 }
